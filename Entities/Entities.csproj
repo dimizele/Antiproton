@@ -5,9 +5,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Selenium.Chrome.WebDriver" Version="85.0.0" />
+    <PackageReference Include="NUnit" Version="3.13.0" />
     <PackageReference Include="Selenium.Support" Version="3.141.0" />
     <PackageReference Include="Selenium.WebDriver" Version="3.141.0" />
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="88.0.4324.9600" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Antiproton\Antiproton.csproj" />
+    <ProjectReference Include="..\Helpers\Helpers.csproj" />
   </ItemGroup>
 
 </Project>
