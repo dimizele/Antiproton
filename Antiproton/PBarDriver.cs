@@ -5,30 +5,37 @@ using System;
 using System.Linq;
 using System.Collections.ObjectModel;
 using System.Threading;
+using OpenQA.Selenium.Support.UI;
 
 namespace Antiproton
 {
-    public class PBarDriver : IWrapsDriver, IWebDriver
+    public class PBarDriver : IWrapsDriver
     {
         private IWebDriver _driver;
         private IJavaScriptExecutor _jsExe;
-        private string _rootElement;
+        private WebDriverWait wait;
 
-        public PBarDriver(IWebDriver driver) : this(driver, "body")
+        public PBarDriver(IWebDriver driver)
         {
-
-        }
-
-        public PBarDriver(IWebDriver driver, string rootElement)
-        {
-            _driver = driver;
+            _driver = driver; 
             _jsExe = (IJavaScriptExecutor)driver;
-            _rootElement = rootElement;
         }
 
         public IWebDriver WrappedDriver => _driver;
 
         public IJavaScriptExecutor JavaScriptExecutor => _jsExe;
+
+        public WebDriverWait Wait
+        {
+            get
+            {
+                return wait ?? new WebDriverWait(WrappedDriver, TimeSpan.FromSeconds(5));
+            }
+            set
+            {
+                wait = value;
+            }
+        }
 
         public string Url 
         {
@@ -98,7 +105,7 @@ namespace Antiproton
 
         public INavigation Navigate()
         {
-            return new PBarNavigation(_driver.Navigate());
+            return new PBarNavigation(_driver.Navigate(), this);
         }
 
         public ITargetLocator SwitchTo()
@@ -116,16 +123,6 @@ namespace Antiproton
         {
             Log.GetLogger().Info($"Finding elements by locator:[{by}]");
             return new ReadOnlyCollection<PBarElement>(_driver.FindElements(by).Select(el => new PBarElement(this, el, by)).ToList());
-        }
-
-        IWebElement ISearchContext.FindElement(By by)
-        {
-            throw new NotImplementedException();
-        }
-
-        ReadOnlyCollection<IWebElement> ISearchContext.FindElements(By by)
-        {
-            throw new NotImplementedException();
         }
 
         public void WaitForDocumentState()

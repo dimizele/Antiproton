@@ -5,10 +5,11 @@ using System;
 using System.Linq;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Threading;
 
 namespace Antiproton
 {
-    public class PBarElement : IWrapsElement, IWebElement
+    public class PBarElement : IWrapsElement
     {
         private PBarDriver _pBarDriver;
         private IWebElement _element;
@@ -109,28 +110,55 @@ namespace Antiproton
             }
         }
 
-        public void Clear()
+        public PBarElement Clear()
         {
             Log.GetLogger().Info($"Clearing element [{ElementIdentifier}]");
             WrappedElement.Clear();
+
+            return this;
         }
 
-        public void SendKeys(string text)
+        public PBarElement SendKeys(string text)
         {
             Log.GetLogger().Info($"Sending [{text}] to element [{ElementIdentifier}]");
             WrappedElement.SendKeys(text);
+
+            return this;
         }
 
-        public void Submit()
+        public PBarElement Submit()
         {
             Log.GetLogger().Info($"Submitting element [{ElementIdentifier}]");
             WrappedElement.Submit();
+
+            return this;
         }
 
-        public void Click()
+        public PBarElement Click()
         {
             Log.GetLogger().Info($"Clicking element [{ElementIdentifier}]");
             WrappedElement.Click();
+
+            return this;
+        }
+
+        public PBarElement ClickAndWaitForUrlChange()
+        {
+            string currentUrl = PBarDriver.Url;
+
+            Log.GetLogger().Info($"Clicking element [{ElementIdentifier}]");
+            WrappedElement.Click();
+
+            Log.GetLogger().Info($"Waiting for url to change after click");
+
+            while (PBarDriver.Url.Equals(currentUrl))
+            {
+                Thread.Sleep(250);
+            }
+
+            Log.GetLogger().Info($"Url changed");
+
+            return this;
         }
 
         public string GetAttribute(string attributeName)
@@ -154,23 +182,13 @@ namespace Antiproton
         public PBarElement FindElement(By by)
         {
             Log.GetLogger().Info($"Finding element by locator:[{by}]");
-            return new PBarElement(PBarDriver, WrappedElement.FindElement(by), by);
+            return new PBarElement(PBarDriver, _element.FindElement(by), by);
         }
 
         public ReadOnlyCollection<PBarElement> FindElements(By by)
         {
             Log.GetLogger().Info($"Finding elements by locator:[{by}]");
-            return new ReadOnlyCollection<PBarElement>(WrappedElement.FindElements(by).Select(el => new PBarElement(PBarDriver, el, by)).ToList());
-        }
-
-        IWebElement ISearchContext.FindElement(By by)
-        {
-            throw new NotImplementedException();
-        }
-
-        ReadOnlyCollection<IWebElement> ISearchContext.FindElements(By by)
-        {
-            throw new NotImplementedException();
+            return new ReadOnlyCollection<PBarElement>(_element.FindElements(by).Select(el => new PBarElement(PBarDriver, el, by)).ToList());
         }
     }
 }
