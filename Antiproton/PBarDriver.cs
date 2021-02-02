@@ -125,6 +125,20 @@ namespace Antiproton
             return new ReadOnlyCollection<PBarElement>(_driver.FindElements(by).Select(el => new PBarElement(this, el, by)).ToList());
         }
 
+        public bool PeekElement(By by)
+        {
+            try
+            {
+                _driver.FindElement(by);
+
+                return true;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        }
+
         public void WaitForDocumentState()
         {
             for (int i = 0; i < 30; i++)

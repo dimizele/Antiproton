@@ -1,4 +1,4 @@
-﻿namespace Antiproton
+﻿namespace Antiproton.AntiprotonPageSetup
 {
     public abstract class PBarPage
     {

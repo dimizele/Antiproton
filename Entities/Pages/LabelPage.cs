@@ -1,10 +1,15 @@
 ﻿using Antiproton;
+using Antiproton.AntiprotonElements;
+using Antiproton.AntiprotonElementExtensions;
+using Antiproton.AntiprotonPageSetup;
+using Entities.PageComponents;
 using Helpers;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Helpers.Enums;
 
 namespace Entities
 {
@@ -14,29 +19,32 @@ namespace Entities
         protected override string PageDomainPrefix { get; set; } = "beta";
 
         private AddAndEditLabelComponent addlabelComponent;
+        private AddAndEditFolderComponent addFolderComponent;
         private DeleteLabelComponent deleteLabelComponent;
 
         protected List<PBarElement> NotificationList => Driver.FindElements(NotificationLocator).ToList();
+
+        protected PBarElement DeleteButton => new PBarElement(Driver, By.CssSelector("button[data-test-id='folders/labels:item-delete']"));
 
         protected PBarElement LabelSection => new PBarElement(Driver, By.CssSelector("section[data-target-id='labellist']"));
 
         protected PBarElement AddLabelButton => new PBarElement(Driver, LabelSection.FindElement(By.TagName("button")));
 
-        protected PBarElement LabelsTable => new PBarElement(Driver, LabelSection.FindElement(By.TagName("tbody")));
-
-        protected List<PBarElement> LabelsList => LabelsTable.FindElements(By.TagName("tr")).ToList();
-
-        protected PBarElement LabelDropDownDeleteButton => new PBarElement(Driver, By.CssSelector("button[data-test-id='folders/labels:item-delete']"));
+        protected PBarTable LabelsTable => new PBarTable(Driver, LabelSection.FindElement(By.TagName("table")));
 
         protected PBarElement FolderSection => new PBarElement(Driver, By.CssSelector("section[data-target-id='folderlist']"));
 
         protected PBarElement AddFolderButton => new PBarElement(Driver, FolderSection.FindElement(By.TagName("button")));
 
+        protected PBarElement FolderList => new PBarElement(Driver, FolderSection.FindElement(By.TagName("ul")));
+
         protected By NotificationLocator = By.CssSelector(".notification-success");
 
-        protected By LabelEditButton = By.CssSelector("button[role='button']");
+        protected By EditButton = By.CssSelector("button[role='button']");
 
-        protected By LabelDropDownButton = By.CssSelector("button[title='Open actions dropdown']");
+        protected By DropDownButton = By.CssSelector("button[title='Open actions dropdown']");
+
+        
 
         public AddAndEditLabelComponent ClickAddLabelButton()
         {
@@ -50,8 +58,10 @@ namespace Entities
 
         public AddAndEditLabelComponent EditRandomLabel(int edittedLabel)
         {
-            LabelsList.ElementAt(edittedLabel)
-                .FindElement(LabelEditButton)
+            LabelsTable
+                .GetAllTableBodyRows()
+                .ElementAt(edittedLabel)
+                .FindElement(EditButton)
                 .Click();
 
             addlabelComponent = new AddAndEditLabelComponent(Driver, this);
@@ -61,13 +71,16 @@ namespace Entities
 
         public DeleteLabelComponent ClickDeleteLabelButton(string labelToBeDeleted)
         {
-            PBarElement labelElementToBeDeleted = LabelsList.ElementAt(GetAllLabelNames().IndexOf(labelToBeDeleted));
+            PBarElement labelElementToBeDeleted = LabelsTable
+                .GetAllTableBodyRows()
+                .ElementAt(GetAllLabelNames()
+                .IndexOf(labelToBeDeleted));
 
             labelElementToBeDeleted
-                .FindElement(LabelDropDownButton)
+                .FindElement(DropDownButton)
                 .Click();
 
-            LabelDropDownDeleteButton
+            DeleteButton
                 .Click();
 
             deleteLabelComponent = new DeleteLabelComponent(Driver, this);
@@ -75,38 +88,35 @@ namespace Entities
             return deleteLabelComponent;
         }
 
-        public LabelPage WaitForSuccessfulAddAndEditNotification()
+        public LabelPage WaitForSuccessfulNotification(string entityName, NotificationEnums notificationEnum)
         {
             Driver.Wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(NotificationLocator));
 
-            WaitForLabelNotification(addlabelComponent.LabelName);
+            WaitForLabelNotification($"{entityName} {notificationEnum.ToString().ToLower()}");
 
             return this;
         }
 
-        public LabelPage WaitForSuccessfulDeleteNotification(string labelName)
+        public LabelPage VerifyCreatedLabel(string expectedLabelName)
         {
-            Driver.Wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(NotificationLocator));
+            PBarElement lastLabelInformation = LabelsTable
+                .GetAllTableBodyRows()
+                .Last()
+                .FindElements(By.TagName("td"))[1];
 
-            WaitForLabelNotification(labelName);
+            VerifyLabelNameAndColor(lastLabelInformation, expectedLabelName);
 
             return this;
         }
 
-        public LabelPage VerifyCreatedLabel()
+        public LabelPage VerifyEdittedLabel(int edittedLabel, string expectedLabelName)
         {
-            PBarElement lastLabelInformation = LabelsList.Last().FindElements(By.TagName("td"))[1];
+            PBarElement edittedLabelInformation = LabelsTable
+                .GetAllTableBodyRows()
+                .ElementAt(edittedLabel)
+                .FindElements(By.TagName("td"))[1];
 
-            VerifyLabelNameAndColor(lastLabelInformation);
-
-            return this;
-        }
-
-        public LabelPage VerifyEdittedLabel(int edittedLabel)
-        {
-            PBarElement edittedLabelInformation = LabelsList.ElementAt(edittedLabel).FindElements(By.TagName("td"))[1];
-
-            VerifyLabelNameAndColor(edittedLabelInformation);
+            VerifyLabelNameAndColor(edittedLabelInformation, expectedLabelName);
 
             return this;
         }
@@ -125,12 +135,24 @@ namespace Entities
 
         public int GetNumberOfCreatedLabels()
         {
-            return LabelsList.Count;
+            return LabelsTable
+                .GetAllTableBodyRows()
+                .Count;
         }
 
         private List<string> GetAllLabelNames()
         {
-            return LabelsList.Select(l => l.Text.Split(Environment.NewLine).First()).ToList();
+            if (LabelSection.PeekElement(By.TagName("tbody")))
+            {
+                return LabelsTable
+                .GetAllTableBodyRows()
+                .Select(l => l.Text.Split(Environment.NewLine).First())
+                .ToList();
+            }
+            else
+            {
+                return new List<string>();
+            }
         }
 
         private void WaitForLabelNotification(string labelName)
@@ -143,7 +165,7 @@ namespace Entities
             }
         }
 
-        private void VerifyLabelNameAndColor(PBarElement label)
+        private void VerifyLabelNameAndColor(PBarElement label, string expectedLabelName)
         {
             string lastLabelColor = label.FindElement(By.TagName("svg")).GetAttribute("style").Split('(')[1].Split(')')[0];
 
@@ -152,8 +174,73 @@ namespace Entities
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(addlabelComponent.LabelColor, lastLabelColor);
-                Assert.AreEqual(addlabelComponent.LabelName, lastLabelName);
+                Assert.AreEqual(expectedLabelName, lastLabelName);
             });
+        }
+
+        public AddAndEditFolderComponent ClickAddFolderButton()
+        {
+            AddFolderButton
+                .Click();
+
+            addFolderComponent = new AddAndEditFolderComponent(Driver, this);
+
+            return addFolderComponent;
+        }
+
+        public LabelPage VerifyParentFolderIsCreated(string folderName)
+        {
+            List<PBarElement> parentElements = FolderList.FindElements(By.TagName("li")).Where(el => !el.GetAttribute("title").Contains("/")).ToList();
+
+            Assert.AreEqual(folderName, parentElements.Last().FindElement(By.TagName("span")).Text);
+
+            return this;
+        }
+
+        public LabelPage VerifyChildFolderIsCreated(string parentFolderName, string childFolderName)
+        {
+            PBarElement parentElement = FolderList.FindElements(By.TagName("li")).Where(el => el.Text.Contains(parentFolderName) && el.Text.Contains(childFolderName)).Single();
+
+            PBarElement childElement = parentElement.FindElement(By.TagName("li"));
+
+            Assert.AreEqual(childFolderName, childElement.FindElement(By.TagName("span")).Text);
+
+            return this;
+        }
+
+        public DeleteLabelComponent DeleteFolder(string folderName)
+        {
+            PBarElement parentElement = FolderList.FindElements(By.TagName("li")).Where(el => el.Text.Contains(folderName)).Single();
+
+            parentElement
+                .FindElement(DropDownButton)
+                .Click();
+
+            DeleteButton
+                .Click();
+
+            deleteLabelComponent = new DeleteLabelComponent(Driver, this);
+
+            return deleteLabelComponent;
+        }
+
+        public LabelPage VerifyFoldersAreDeleted(List<string> folderNames)
+        {
+            if (FolderSection.PeekElement(By.TagName("ul")))
+            {
+                List<PBarElement> allFolderElements = FolderList.FindElements(By.TagName("li")).ToList();
+
+                List<string> allFolderNames = allFolderElements.Select(el => el.Text.Split(Environment.NewLine).First()).ToList(); 
+                
+                Assert.IsFalse(allFolderNames.Intersect(folderNames).Any());
+            }
+            else
+            {
+                //If there are no folders then the folders are definetelly deleted
+                Assert.IsTrue(true);
+            }            
+
+            return this;
         }
     }
 }
