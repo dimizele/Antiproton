@@ -1,10 +1,8 @@
 ﻿using Antiproton;
 using Helpers;
 using OpenQA.Selenium;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Entities
 {
@@ -12,6 +10,7 @@ namespace Entities
     {
         public PBarDriver Driver { get; set; }
 
+        private string _labelName;
         private string _labelColor;
         private LabelPage _labelPage;
 
@@ -33,9 +32,21 @@ namespace Entities
             }
         }
 
+        public string LabelName
+        {
+            get
+            {
+                return _labelName;
+            }
+            set
+            {
+                _labelName = value;
+            }
+        }
+
         protected PBarElement Component => new PBarElement(Driver, By.TagName("Dialog"));
 
-        protected PBarElement LabelName => new PBarElement(Driver, By.Id("accountName"));
+        protected PBarElement LabelNameInput => new PBarElement(Driver, By.Id("accountName"));
 
         protected PBarElement ColorSelector => new PBarElement(Driver, Component.FindElement(By.CssSelector(".flex-item-noshrink.pm-button")));
 
@@ -49,9 +60,13 @@ namespace Entities
 
         public AddAndEditLabelComponent FillLabelName(string labelName = null)
         {
-            LabelName
-                .Clear()
-                .SendKeys(labelName ?? RandomDataGenerator.RandomStringOnlyLetters(RandomDataGenerator.RandomNumber(7, 13)));
+            labelName = labelName ?? RandomDataGenerator.RandomStringOnlyLetters(RandomDataGenerator.RandomNumber(7, 13));
+
+            LabelNameInput
+                .ClearWithCtrlADelete()
+                .SendKeys(labelName);
+
+            LabelName = labelName;
 
             return this;
         }
@@ -63,7 +78,7 @@ namespace Entities
 
             PBarElement selectedColor = AllColorsList.RandomListItem();
 
-            LabelColor = selectedColor.GetAttribute("value");
+            LabelColor = selectedColor.GetAttribute("style").Split('(')[1].Split(')')[0];
 
             selectedColor.Click();
 
