@@ -9,7 +9,7 @@ namespace TestBases
 {
     public class TestBase
     {
-        public PBarDriver Driver;
+        protected PBarDriver Driver;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()

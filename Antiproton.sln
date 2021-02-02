@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Entities", "Entities\Entiti
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestBases", "TestBases\TestBases.csproj", "{D5E2949F-C837-4A86-979D-5D0ADC671339}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers", "Helpers\Helpers.csproj", "{DB1FB94E-19FF-4155-B8E5-E2612DDE4502}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Helpers", "Helpers\Helpers.csproj", "{DB1FB94E-19FF-4155-B8E5-E2612DDE4502}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

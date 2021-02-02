@@ -17,7 +17,7 @@ namespace Entities
         public LogInPage FillEmail(string email)
         {
             Email
-                .Clear()
+                .ClearWithCtrlADelete()
                 .SendKeys(email);
 
             return this;

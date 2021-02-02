@@ -118,6 +118,15 @@ namespace Antiproton
             return this;
         }
 
+        public PBarElement ClearWithCtrlADelete()
+        {
+            Log.GetLogger().Info($"Clearing element [{ElementIdentifier}]");
+            SendKeys(Keys.Control + "a");
+            SendKeys(Keys.Delete);
+
+            return this;
+        }
+
         public PBarElement SendKeys(string text)
         {
             Log.GetLogger().Info($"Sending [{text}] to element [{ElementIdentifier}]");
