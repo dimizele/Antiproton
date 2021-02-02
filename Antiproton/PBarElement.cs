@@ -199,5 +199,19 @@ namespace Antiproton
             Log.GetLogger().Info($"Finding elements by locator:[{by}]");
             return new ReadOnlyCollection<PBarElement>(_element.FindElements(by).Select(el => new PBarElement(PBarDriver, el, by)).ToList());
         }
+
+        public bool PeekElement(By by)
+        {
+            try
+            {
+                _element.FindElement(by);
+
+                return true;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        }
     }
 }

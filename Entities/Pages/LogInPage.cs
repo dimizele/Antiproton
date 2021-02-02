@@ -1,4 +1,5 @@
 ﻿using Antiproton;
+using Antiproton.AntiprotonPageSetup;
 using OpenQA.Selenium;
 
 namespace Entities

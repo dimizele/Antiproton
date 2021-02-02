@@ -1,4 +1,5 @@
 ﻿using Antiproton;
+using Antiproton.AntiprotonPageSetup;
 using Helpers;
 using OpenQA.Selenium;
 using System.Collections.Generic;
@@ -6,11 +7,8 @@ using System.Linq;
 
 namespace Entities
 {
-    public class AddAndEditLabelComponent
+    public class AddAndEditLabelComponent : PBarComponent
     {
-        public PBarDriver Driver { get; set; }
-
-        private string _labelName;
         private string _labelColor;
         private LabelPage _labelPage;
 
@@ -32,20 +30,6 @@ namespace Entities
             }
         }
 
-        public string LabelName
-        {
-            get
-            {
-                return _labelName;
-            }
-            set
-            {
-                _labelName = value;
-            }
-        }
-
-        protected PBarElement Component => new PBarElement(Driver, By.TagName("Dialog"));
-
         protected PBarElement LabelNameInput => new PBarElement(Driver, By.Id("accountName"));
 
         protected PBarElement ColorSelector => new PBarElement(Driver, Component.FindElement(By.CssSelector(".flex-item-noshrink.pm-button")));
@@ -56,17 +40,11 @@ namespace Entities
 
         protected PBarElement SaveButton => new PBarElement(Driver, Component.FindElement(By.CssSelector("button[type='submit']")));
 
-        protected PBarElement CancelButton => new PBarElement(Driver, Component.FindElement(By.CssSelector("button[type='submit']")));
-
-        public AddAndEditLabelComponent FillLabelName(string labelName = null)
+        public AddAndEditLabelComponent FillLabelName(string labelName)
         {
-            labelName = labelName ?? RandomDataGenerator.RandomStringOnlyLetters(RandomDataGenerator.RandomNumber(7, 13));
-
             LabelNameInput
                 .ClearWithCtrlADelete()
                 .SendKeys(labelName);
-
-            LabelName = labelName;
 
             return this;
         }
